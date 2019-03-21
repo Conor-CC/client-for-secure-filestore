@@ -1,0 +1,16 @@
+<div class="container-fluid">
+  <div class="row">
+
+    <div class="col-6 d-block bg-primary" id="div1">
+    </div>
+    <div class="col-5 d-block bg-secondary" id="div3">
+    </div>
+  </div>
+
+    <script type="text/javascript">
+      $( document ).ready(function() {
+          $( "#div1").load("/getUserGroups");
+          $( "#div3").load("/createGroupPane");
+      });
+    </script>
+</div>

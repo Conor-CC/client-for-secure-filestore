@@ -1,0 +1,46 @@
+<div class="col-11">
+  <h3>Groups you are a member of:</h3>
+    <%  //console.log(locals.membership);
+        var obj = JSON.parse(locals.membership);
+        var ids = [];
+        var array = [];
+        for (i = 0; i < obj.length; i++) {
+          console.log(obj[i]);
+          ids.push(obj[i]._id);
+          array.push(obj[i]);
+        }
+        console.log(ids);
+    for (i = 0; i < ids.length; i++) {  %>
+      <% if (obj[i].ownerId === locals.userId) { %>
+    <h5>You own this group!</h5>
+      <% } %>
+    <button type="button" class="btn btn-secondary" id="button<%= i %>" name="<%= ids[i] %>"><%= ids[i] %></button>
+    <div class="col-10">
+      <div class="col-12">
+        <h4>Members:</h4>
+        <ul>
+          <% for (q = 0; q < array[i].members.length; q++) { %>
+            <li><%= array[i].members[q].email %></li>
+          <% } %>
+        </ul>
+      </div>
+      <% if (obj[i].ownerId === locals.userId) { %>
+        <div class="col-12">
+          <form class="" action="/addUserToMastersGroup" method="post">
+            <input type="text" name="email" value="" placeholder="Add user to group!">
+            <input type="text" name="symmetricKey" value="" placeholder="symmetric key">
+            <input type="hidden" name="groupId" value="<%= array[i]._id %>">
+            <button type="submit" class="btn btn-danger" name="button">Add User</button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+    <hr>
+    <hr>
+    <% } %>
+    <script type="text/javascript">
+      $( document ).ready(function () {
+
+      });
+    </script>
+</div>

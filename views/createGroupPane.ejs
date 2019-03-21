@@ -1,0 +1,13 @@
+<div class="col-11">
+  <form action="/createGroup" method="post" id="createGroupForm">
+      <input type="text" class="" name="symmetricKey" value="" placeholder="Input a symmetric key">
+      <button type="button" id="submit-new-group" class="btn btn-block btn-success">Create Group!</button>
+  </form>
+  <script type="text/javascript">
+    $( document ).ready(function() {
+      $( "#submit-new-group" ).click(function () {
+        $( "#createGroupForm" ).submit();
+      });
+    });
+  </script>
+</div>

@@ -1,0 +1,21 @@
+{
+  "name": "key-gen",
+  "version": "1.0.0",
+  "description": "key pair generator",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cryptico":"^1.0.2",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "nodemon": "^1.18.10",
+    "node-session": "^1.2.1",
+    "express-session": "^1.15.6"
+  }
+}
