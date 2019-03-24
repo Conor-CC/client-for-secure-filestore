@@ -1,3 +1,5 @@
 /node_modules
 checklit.txt
 /sessions
+/uploads
+/tmp

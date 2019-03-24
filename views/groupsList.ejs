@@ -1,21 +1,19 @@
-<div class="col-11">
-  <h3>Groups you are a member of:</h3>
+<div class="col-12">
+  <h2>Groups you are a member of:</h2>
     <%  //console.log(locals.membership);
         var obj = JSON.parse(locals.membership);
         var ids = [];
         var array = [];
         for (i = 0; i < obj.length; i++) {
-          console.log(obj[i]);
           ids.push(obj[i]._id);
           array.push(obj[i]);
         }
-        console.log(ids);
     for (i = 0; i < ids.length; i++) {  %>
+    <button type="button" class="btn btn-block btn-secondary" data-toggle="collapse" data-target="#submenu<%= i %>" aria-expanded="false" aria-controls="submenu<%= i %>"><%= obj[i].groupName %></button>
+    <div class="col-10 collapse" id="submenu<%= i %>">
       <% if (obj[i].ownerId === locals.userId) { %>
-    <h5>You own this group!</h5>
+    <h5><i>You own this group!</i></h5>
       <% } %>
-    <button type="button" class="btn btn-secondary" id="button<%= i %>" name="<%= ids[i] %>"><%= ids[i] %></button>
-    <div class="col-10">
       <div class="col-12">
         <h4>Members:</h4>
         <ul>
@@ -24,13 +22,41 @@
           <% } %>
         </ul>
       </div>
+      <button type="button" name=""  class="btn btn-block btn-secondary" data-toggle="collapse" data-target="#media<%= i %>" aria-expanded="false" aria-controls="media<%= i %>">Group Files</button>
+      <div class="col-12 collapse" id="media<%= i %>">
+        <ul>
+          <% var media = array[i].mediaLinks;
+            console.log(media);
+            var z = 0;
+             for (z = 0; z < media.length; z++) { %>
+               <form method="post" action="/decryptFile">
+                 <input type="hidden" name="url" value="<%= media[z] %>">
+                 <input type="hidden" name="groupData" value="<%= JSON.stringify(array[i]); %>">
+                 <li><%= media[z] %></li>
+                 <button type="submit" name="">Download</button>
+               </form>
+          <% } %>
+        </ul>
+      </div>
+      <div class="col-12">
+        <form action="/uploadFile" method="post" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="exampleFormControlFile1">Secure Upload File</label>
+            <input type="file" name="fileyboi" class="form-control-file" id="exampleFormControlFile1">
+            <input type="hidden" name="groupData" value="<%= JSON.stringify(array[i]); %>">
+            <button type="submit" class="btn btn-block btn-success" name="">Upload!</button>
+          </div>
+        </form>
+      </div>
       <% if (obj[i].ownerId === locals.userId) { %>
         <div class="col-12">
           <form class="" action="/addUserToMastersGroup" method="post">
-            <input type="text" name="email" value="" placeholder="Add user to group!">
-            <input type="text" name="symmetricKey" value="" placeholder="symmetric key">
-            <input type="hidden" name="groupId" value="<%= array[i]._id %>">
-            <button type="submit" class="btn btn-danger" name="button">Add User</button>
+            <div class="form-group">
+              <input type="text"  class="form-control" name="email" value="" placeholder="Add user by email to group!">
+              <input type="text" class="form-control" name="symmetricKey" value="" placeholder="symmetric key">
+              <input type="hidden" class="form-control" name="groupId" value="<%= array[i]._id %>">
+            </div>
+            <button type="submit" class="btn btn-block btn-danger" name="button">Add User</button>
           </form>
         </div>
       <% } %>

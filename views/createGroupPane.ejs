@@ -1,6 +1,12 @@
 <div class="col-11">
+  <h2>Create a secure Filestore Group</h2>
   <form action="/createGroup" method="post" id="createGroupForm">
-      <input type="text" class="" name="symmetricKey" value="" placeholder="Input a symmetric key">
+      <div class="form-group">
+        <input type="text" class="form-control" name="symmetricKey" value="" placeholder="Input a symmetric key">
+      </div>
+      <div class="form-group">
+        <input type="text" class="form-control" name="groupName" value="" placeholder="Input a Group Name">
+      </div>
       <button type="button" id="submit-new-group" class="btn btn-block btn-success">Create Group!</button>
   </form>
   <script type="text/javascript">
