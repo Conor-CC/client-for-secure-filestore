@@ -3,3 +3,5 @@ checklit.txt
 /sessions
 /uploads
 /tmp
+user_keys.json
+config.json

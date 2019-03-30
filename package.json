@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.429.0",
     "cryptico": "^1.0.2",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
@@ -24,7 +25,6 @@
     "multer": "^1.4.1",
     "node-session": "^1.2.1",
     "nodemon": "^1.18.10",
-    "triplesec": "^4.0.3",
-    "googleapis": "^27.0.0"
+    "triplesec": "^4.0.3"
   }
 }

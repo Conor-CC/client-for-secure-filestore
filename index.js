@@ -1,4 +1,5 @@
 var cryptico = require("cryptico");
+const AWS = require('aws-sdk');
 const fs = require('fs');
 const http = require('http');
 const ejs = require('ejs')
@@ -9,14 +10,23 @@ var session = require('express-session');
 const app = express();
 const router = express.Router();
 var multer = require('multer');
-var upload = multer({ dest: '../drive/' })
-var passPhrase = "Secret Pass!!";
-const triplesec = require('triplesec');
+var upload = multer({ dest: '../drive/' });
 const crypto = require('crypto');
-var cp = require('child_process')
-  , assert = require('assert')
-  ;
-const networkDrive = "home/conor/Desktop/NetworkDrive"
+var cp = require('child_process'), assert = require('assert');
+const path = require('path');
+const config = require('./config.json');
+
+//configuring the AWS environment
+AWS.config.update({
+    accessKeyId: config.accessId,
+    secretAccessKey: config.secretKey
+});
+
+var s3 = new AWS.S3();
+
+
+const networkDrive = "home/conor/Desktop/NetworkDrive";
+
 
 const encrypt = (data, pubKey)  => {
     var buffer = Buffer.from(data);
@@ -29,6 +39,7 @@ const decrypt = (data, privKey) => {
     var decryptedData = crypto.privateDecrypt(privKey, buffer);
     return decryptedData.toString('utf8')
 }
+
 
 app.use(bodyParser.urlencoded({
     extended: false
@@ -308,21 +319,38 @@ router.post("/uploadFile", upload.single('fileyboi'), function (req, res) {
     var name = req.file.path.split('/');
     name = name[name.length - 1];
 
-    fs.writeFile(req.file.path, ciphered, function () {
-      //Where to upload file to cloud store
-      request.patch({
-        url: "http://localhost:8080/group/mediaLinks/",
-        headers: { "Content-Type":"application/json",
-                   "Authorization": token
-        },
-        json: {groupId: obj._id, link: req.file.path}
-      }, function () {
-        console.log("Encrypted write success! Stored in " + networkDrive + name);
-        res.redirect("/index");
-      })
-      //Now simulate decryption for testing
-    });
 
+
+    var filePath = "./tmp/" + name;
+    //configuring parameters
+    var params = {
+      Bucket: 'node-keystore-bucket',
+      Body : ciphered,
+      Key : "folder/"+name
+    };
+    console.log("Parameters: " + JSON.stringify(params));
+    s3.upload(params, function (err, data) {
+      //handle error
+      if (err) {
+        console.log("Error", err);
+      }
+
+      //success
+      if (data) {
+        console.log("Uploaded in:", data.Location);
+        request.patch({
+          url: "http://localhost:8080/group/mediaLinks/",
+          headers: { "Content-Type":"application/json",
+                     "Authorization": token
+          },
+          json: {groupId: obj._id, link: ("folder/" + name)}
+        }, function () {
+          console.log("Encrypted write success! Stored in folder/" + name);
+          res.redirect("/index");
+        });
+        //Now simulate decryption for testing
+      }
+    });
 });
 
 router.post("/decryptFile", function (req, res) {
@@ -330,51 +358,57 @@ router.post("/decryptFile", function (req, res) {
     var url_path = req.body.url;
     console.log(req.body);
 
-    //Below will be a get request to cloud in future!!!
-    // (For now just get from local file store)
-    var encryptedFile = fs.readFileSync(url_path, 'utf-8')
-
-
-    // Get users encrypted symmetric from group
-    console.log(req.body);
-    var obj = JSON.parse(req.body.groupData);
-    var members = obj.members;
-    var encrypted_symmetric = "";
-    var i = 0;
-    for (i = 0; i < members.length; i++) {
-      if (req.session.email == members[i].email) {
-        encrypted_symmetric = members[i].encrypted_symmetric;
-      }
-    }
-    console.log(encrypted_symmetric);
-    //Decrypt user encypted symmetric with user pk
-    var privateKey = '';
-    var local_data = JSON.parse(fs.readFileSync('user_keys.json'));
-    for (i = 0; i < local_data.length; i++) {
-      if (req.session.email === local_data[i].email) {
-        privateKey = local_data[i].privateKey;
-      }
-    }
-    console.log("ENC SYM: " + encrypted_symmetric);
-    console.log("Priv: " + privateKey);
-    decryptedSymmetric = decrypt(encrypted_symmetric, privateKey);
-    console.log("Symmetric decrypted! " + decryptedSymmetric);
-    //Decrypt subsequently decrypt file with symmetric
-    var decipher = crypto.createDecipher('aes256', decryptedSymmetric);
-    var deciphered = decipher.update(encryptedFile, 'hex', 'utf8')
-    deciphered += decipher.final()
-
     var name = url_path.split("/")
     name = name[name.length - 1]
-    fs.open(('tmp/' + name), 'w', function (err, file) {
-      if (err) throw err;
-      fs.writeFileSync(("tmp/" + name), deciphered, 'utf-8');
-      res.download("tmp/" + name);
-    });
 
 
-    //var plaintext = buff.toString();
-    //send file to user
+    s3.getObject(
+      { Bucket: "node-keystore-bucket", Key: ("folder/" + name) },
+      function (error, data) {
+        if (error != null) {
+          console.log("Failed to retrieve an object: " + error);
+        } else {
+          console.log("Loaded " + data.ContentLength + " bytes");
+          // do something with data.Body
+          console.log("Oi lad heres the object there now hai: " + data.Body.toString());
+          var encrypted_object = data.Body.toString();
+          //Below will be a get request to cloud in future!!!
+          // (For now just get from local file store)
+          //var encryptedFile = fs.readFileSync(url_path, 'utf-8')
+
+
+          // Get users encrypted symmetric from group
+          console.log(req.body);
+          var obj = JSON.parse(req.body.groupData);
+          var members = obj.members;
+          var encrypted_symmetric = "";
+          var i = 0;
+          for (i = 0; i < members.length; i++) {
+            if (req.session.email == members[i].email) {
+              encrypted_symmetric = members[i].encrypted_symmetric;
+            }
+          }
+          console.log(encrypted_symmetric);
+          //Decrypt user encypted symmetric with user pk
+          var privateKey = '';
+          var local_data = JSON.parse(fs.readFileSync('user_keys.json'));
+          for (i = 0; i < local_data.length; i++) {
+            if (req.session.email === local_data[i].email) {
+              privateKey = local_data[i].privateKey;
+            }
+          }
+          console.log("ENC SYM: " + encrypted_symmetric);
+          console.log("Priv: " + privateKey);
+          decryptedSymmetric = decrypt(encrypted_symmetric, privateKey);
+          console.log("Symmetric decrypted! " + decryptedSymmetric);
+          //Decrypt subsequently decrypt file with symmetric
+          var decipher = crypto.createDecipher('aes256', decryptedSymmetric);
+          var deciphered = decipher.update(encrypted_object, 'hex', 'utf8');
+          deciphered += decipher.final();
+        }
+      }
+    );
+
 });
 
 router.post("/generateKeyPair", function (req, res) {
